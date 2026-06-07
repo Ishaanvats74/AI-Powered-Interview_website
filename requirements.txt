@@ -1,5 +1,5 @@
-pip install "fastapi[standard]"
-pip install -U langchain
-pip install -U langgraph
-pip install -qU langchain-ollama
-pip install vapi_python
+fastapi[standard]
+langchain
+langgraph
+langchain-ollama
+vapi_python
