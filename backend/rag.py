@@ -32,5 +32,3 @@ Resume:
 result = llm.invoke(prompt)
 print(result.content)
 
-# result = embeddingss.embed_query(result.content)
-# print(result)

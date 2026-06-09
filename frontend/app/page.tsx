@@ -1,10 +1,15 @@
 "use client";
 
+import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
+
   const router = useRouter();
+  const user = useUser();
+
+  console.log(user.isSignedIn);
 
   const handleToTop = () => {
     window.scrollTo({
@@ -36,12 +41,34 @@ export default function Home() {
             Interview<span className="text-indigo-500">AI</span>
           </h1>
 
-          <button
-            onClick={() => router.push("/uploadResume")}
-            className="rounded-xl bg-indigo-600 px-5 py-2 font-medium transition hover:bg-indigo-500"
-          >
-            Get Started
-          </button>
+          <div className="flex items-center gap-4">
+            {user.isSignedIn ? (
+              <>
+                <button
+                  onClick={() => router.push("/uploadResume")}
+                  className="rounded-xl bg-indigo-600 px-5 py-2 font-medium transition hover:bg-indigo-500"
+                >
+                  Upload Resume
+                </button>
+
+                <UserButton />
+              </>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <button className="rounded-xl border border-zinc-700 px-5 py-2 font-medium hover:bg-zinc-900">
+                    Sign In
+                  </button>
+                </SignInButton>
+
+                <SignUpButton mode="modal">
+                  <button className="rounded-xl bg-indigo-600 px-5 py-2 font-medium transition hover:bg-indigo-500">
+                    Get Started
+                  </button>
+                </SignUpButton>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -73,7 +100,13 @@ export default function Home() {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <button
-              onClick={() => router.push("/uploadResume")}
+              onClick={() => {
+                if (user.isSignedIn) {
+                  router.push("/uploadResume");
+                } else {
+                  router.push("/sign-up");
+                }
+              }}
               className="rounded-xl bg-indigo-600 px-8 py-4 font-semibold transition hover:bg-indigo-500"
             >
               Start Interview
@@ -295,7 +328,13 @@ export default function Home() {
           </p>
 
           <button
-            onClick={() => router.push("/uploadResume")}
+            onClick={() => {
+              if (user.isSignedIn) {
+                router.push("/uploadResume");
+              } else {
+                router.push("/sign-up");
+              }
+            }}
             className="mt-10 rounded-xl bg-indigo-600 px-8 py-4 font-semibold transition hover:bg-indigo-500"
           >
             Start Free Interview

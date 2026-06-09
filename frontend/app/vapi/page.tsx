@@ -18,6 +18,7 @@ export default function Page() {
   const handleClick = async () => {
     if (!vapiRef.current) return;
     vapiRef.current.start("97b6b036-19a2-4484-b414-e3ed10d9cfb1");
+    
     try {
       vapiRef.current.on("speech-start", () => {
         console.log("Speech has started");
