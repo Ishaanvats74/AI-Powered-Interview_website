@@ -1,15 +1,46 @@
 "use client";
 
-import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+import {
+  SignInButton,
+  SignUpButton,
+  useAuth,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 
 export default function Home() {
-
   const router = useRouter();
-  const user = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
 
-  console.log(user.isSignedIn);
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+
+    const Check_user = async () => {
+      try {
+        const token = await getToken();
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/check-user`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await response.json();
+        console.log(result);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    Check_user();
+  }, [getToken, isLoaded, user]);
 
   const handleToTop = () => {
     window.scrollTo({
@@ -42,7 +73,7 @@ export default function Home() {
           </h1>
 
           <div className="flex items-center gap-4">
-            {user.isSignedIn ? (
+            {isSignedIn ? (
               <>
                 <button
                   onClick={() => router.push("/uploadResume")}
@@ -101,7 +132,7 @@ export default function Home() {
           <div className="mt-10 flex flex-wrap gap-4">
             <button
               onClick={() => {
-                if (user.isSignedIn) {
+                if (isSignedIn) {
                   router.push("/uploadResume");
                 } else {
                   router.push("/sign-up");
@@ -329,7 +360,7 @@ export default function Home() {
 
           <button
             onClick={() => {
-              if (user.isSignedIn) {
+              if (isSignedIn) {
                 router.push("/uploadResume");
               } else {
                 router.push("/sign-up");

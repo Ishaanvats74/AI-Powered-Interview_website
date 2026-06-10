@@ -10,5 +10,4 @@ requests
 langchain-qdrant
 langchain-google-genai
 supabase
-https://956797f6-1823-4c59-8e5e-81051554bf21.eu-west-1-0.aws.cloud.qdrant.io
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6NTdiMjY3ZTYtMGE4Yy00NmY2LTkxMGQtYWMwYmU2NWMyMzVlIn0.XAOQsD6I6kpcm6asKZNp5E3ccHw_JBBn-pIlq_Vsss8
+clerk-backend-api
