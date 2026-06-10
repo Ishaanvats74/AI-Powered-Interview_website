@@ -7,7 +7,7 @@ import React, { useState } from "react";
 export default function UploadResumePage() {
   const [pdfFile, setPdfFile] = useState<File>();
   const router = useRouter();
-  const {user}=useUser();
+  const { user } = useUser();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -19,19 +19,23 @@ export default function UploadResumePage() {
       return;
     }
     setPdfFile(file);
-    UploadPdf(file);
   };
-
+  const handleUpload = async () => {
+    if (!pdfFile) return;
+    const result = await UploadPdf(pdfFile);
+    if (!result) return;
+    router.push("/vapi");
+  };
   const UploadPdf = async (file: File) => {
     const form = new FormData();
     form.append(`file`, file);
-    form.append('userId',user!.id);
+    form.append("userId", user!.id);
     const response = await fetch("http://127.0.0.1:8000/UploadResume", {
       method: "POST",
       body: form,
     });
     const result = await response.json();
-    console.log(result);
+    return result;
   };
 
   return (
@@ -81,8 +85,8 @@ export default function UploadResumePage() {
             </h1>
 
             <p className="mt-4 text-zinc-400">
-              We&apos;ll analyze your skills, projects, and experience to create a
-              personalized AI interview.
+              We&apos;ll analyze your skills, projects, and experience to create
+              a personalized AI interview.
             </p>
           </div>
 
@@ -195,6 +199,7 @@ export default function UploadResumePage() {
 
           {/* Start Button */}
           <button
+            onClick={handleUpload}
             disabled={!pdfFile}
             className="mt-8 w-full rounded-2xl bg-indigo-600 py-4 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
