@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 .env
 __pycache__/
+env
+=======
+env
+>>>>>>> fc7aa13 (more production backend is made after that will make frontend)
