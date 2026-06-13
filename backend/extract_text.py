@@ -1,7 +1,6 @@
+from langchain_core.documents import Document
 from pypdf import PdfReader
 from io import BytesIO
-from langchain_core.documents import Document
-from fastapi import File
 
 def extract_text(file:bytes,file_path:str,user_id:str,resume_id:str):
     pdf_stream = BytesIO(file)
