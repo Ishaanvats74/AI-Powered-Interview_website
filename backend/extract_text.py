@@ -3,7 +3,7 @@ from io import BytesIO
 from langchain_core.documents import Document
 from fastapi import File
 
-def extract_text(file:File,file_path:str,user_id:str,resume_id:str):
+def extract_text(file:bytes,file_path:str,user_id:str,resume_id:str):
     pdf_stream = BytesIO(file)
     reader = PdfReader(pdf_stream)
 
@@ -21,7 +21,7 @@ def extract_text(file:File,file_path:str,user_id:str,resume_id:str):
                 metadata={
                     "user_id": user_id,
                     "source": file_path,
-                    "page": i,
+                    "page": i + 1,
                     "resume_id": resume_id
                 }
             )
