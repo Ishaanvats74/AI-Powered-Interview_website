@@ -1,6 +1,7 @@
 "use client";
 
 import Vapi from "@vapi-ai/web";
+import { useAuth } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -9,83 +10,132 @@ type Message = {
   text: string;
 };
 
-export default function Page() {
+export default function VapiPage() {
   const router = useRouter();
+  const { getToken, userId } = useAuth();
   const [liveTranscript, setLiveTranscript] = useState("");
   const [conversation, setConversation] = useState<Message[]>([]);
   const [isCallActive, setIsCallActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-
+  const [saving, setSaving] = useState(false);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
   const vapiRef = useRef<Vapi | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const conversationRef = useRef<Message[]>([]);
+
+  const handleSaveInterview = async () => {
+    if (conversationRef.current.length === 0) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      const config = JSON.parse(
+        sessionStorage.getItem("interviewConfig") || "{}",
+      );
+      const durationSeconds = startTimeRef.current
+        ? Math.floor((Date.now() - startTimeRef.current) / 1000)
+        : 0;
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/save-interview`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: conversationRef.current,
+            interview_type: config.interviewType || "fullstack",
+            difficulty: config.difficulty || "medium",
+            duration_seconds: durationSeconds,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+
+        throw new Error(err.detail || "Failed to save interview");
+      }
+
+      const result = await response.json();
+
+      router.push(`/interview/results/${result.interview_id}`);
+    } catch (error) {
+      console.error("Failed to save interview:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!vapiRef.current) {
-      vapiRef.current = new Vapi("57e231a9-93f0-41b4-a7a9-bff2bf3c49d0");
+      vapiRef.current = new Vapi(process.env.NEXT_PUBLIC_VAPI_KEY!);
     }
-
     const vapi = vapiRef.current;
 
-    vapi.on("speech-start", () => {
-      console.log('speech started')
-      setIsSpeaking(true);
-    });
-
-    vapi.on("speech-end", () => {
-      console.log('speech end')
-      setIsSpeaking(false);
-    });
-
+    vapi.on("speech-start", () => setIsSpeaking(true));
+    vapi.on("speech-end", () => setIsSpeaking(false));
     vapi.on("call-start", () => {
-      console.log('call started')
       setIsCallActive(true);
+      startTimeRef.current = Date.now();
     });
-
     vapi.on("call-end", () => {
-      console.log('call end')
       setIsCallActive(false);
       setIsSpeaking(false);
+      handleSaveInterview();
     });
-
     vapi.on("message", (message) => {
-      if (message.type === "transcript") {
-        console.log("TRANSCRIPT:", message);
-      }
       if (message.type !== "transcript") return;
-
       if (message.transcriptType === "partial") {
         setLiveTranscript(message.transcript);
       }
-      if (message.type === "transcript" && message.transcriptType === "final") {
-        setConversation((prev) => [
-          ...prev,
-          {
-            role: message.role,
-            text: message.transcript,
-          },
-        ]);
+      if (message.transcriptType === "final") {
+        setConversation((prev) => {
+          const updated = [
+            ...prev,
+            {
+              role: message.role,
+              text: message.transcript,
+            },
+          ];
+
+          conversationRef.current = updated;
+          return updated;
+        });
+
         setLiveTranscript("");
       }
     });
-
-    vapi.on("error", (e) => {
-      console.error(e);
-    });
+    vapi.on("error", (e) => console.error(e));
 
     return () => {
       vapi.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleStart = async () => {
     if (!vapiRef.current) return;
-
     try {
       setConversation([]);
-      await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
+      conversationRef.current = [];
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Pull config from sessionStorage if set via setup page
+      const config = JSON.parse(
+        sessionStorage.getItem("interviewConfig") || "{}",
+      );
+      await vapiRef.current.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
+        variableValues: {
+          userId: userId,
 
-      await vapiRef.current.start("97b6b036-19a2-4484-b414-e3ed10d9cfb1");
+          interviewType: config.interviewType || "fullstack",
+
+          difficulty: config.difficulty || "medium",
+
+          duration: config.duration || "15",
+        },
+      });
     } catch (error) {
       console.error(error);
     }
@@ -93,7 +143,6 @@ export default function Page() {
 
   const handleStop = async () => {
     if (!vapiRef.current) return;
-
     try {
       await vapiRef.current.stop();
     } catch (error) {
@@ -101,11 +150,14 @@ export default function Page() {
     }
   };
 
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversation, liveTranscript]);
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-black text-white">
       {/* Background */}
       <div className="absolute inset-0 -z-20 bg-black" />
-
       <div
         className="absolute inset-0 -z-10 opacity-20"
         style={{
@@ -114,20 +166,20 @@ export default function Page() {
           backgroundSize: "60px 60px",
         }}
       />
-
       <div className="absolute left-1/2 top-20 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[120px]" />
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-black/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <h1 className="text-2xl font-bold">
-            Interview
-            <span className="text-indigo-500">AI</span>
+            Interview<span className="text-indigo-500">AI</span>
           </h1>
-
           <button
-            onClick={() => router.push("/")}
-            className="rounded-xl border border-zinc-700 px-5 py-2 hover:bg-zinc-900"
+            onClick={() => {
+              if (isCallActive) handleStop();
+              router.push("/");
+            }}
+            className="rounded-xl border border-zinc-700 px-5 py-2 hover:bg-zinc-900 transition"
           >
             Exit
           </button>
@@ -141,11 +193,9 @@ export default function Page() {
             <div className="mb-4 inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm text-indigo-400">
               Live AI Interview
             </div>
-
             <h1 className="text-3xl font-bold sm:text-5xl">
               Voice Interview Session
             </h1>
-
             <p className="mt-4 text-zinc-400">
               Talk naturally with your AI interviewer.
             </p>
@@ -154,13 +204,19 @@ export default function Page() {
           {/* Status */}
           <div className="flex justify-center">
             <div
-              className={`rounded-full px-4 py-2 text-sm font-medium ${
-                isCallActive
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-zinc-800 text-zinc-400"
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                saving
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : isCallActive
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-zinc-800 text-zinc-400"
               }`}
             >
-              {isCallActive ? "Interview In Progress" : "Ready To Start"}
+              {saving
+                ? "Saving interview..."
+                : isCallActive
+                  ? "● Interview In Progress"
+                  : "Ready To Start"}
             </div>
           </div>
 
@@ -181,16 +237,15 @@ export default function Page() {
           <div className="flex flex-col gap-4 sm:flex-row">
             <button
               onClick={handleStart}
-              disabled={isCallActive}
-              className="flex-1 rounded-2xl bg-indigo-600 py-4 font-semibold transition hover:bg-indigo-500 disabled:opacity-50"
+              disabled={isCallActive || saving}
+              className="flex-1 rounded-2xl bg-indigo-600 py-4 font-semibold transition hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Start Interview
             </button>
-
             <button
               onClick={handleStop}
               disabled={!isCallActive}
-              className="flex-1 rounded-2xl border border-red-500 py-4 font-semibold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+              className="flex-1 rounded-2xl border border-red-500 py-4 font-semibold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               End Interview
             </button>
@@ -199,14 +254,12 @@ export default function Page() {
           {/* Transcript */}
           <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
             <h2 className="mb-6 text-xl font-semibold">Live Transcript</h2>
-
             <div className="max-h-[500px] space-y-4 overflow-y-auto">
-              {conversation.length === 0 && (
+              {conversation.length === 0 && !liveTranscript && (
                 <p className="text-zinc-500">
                   Transcript will appear here once the interview starts.
                 </p>
               )}
-
               {conversation.map((msg, index) => (
                 <div
                   key={index}
@@ -216,20 +269,21 @@ export default function Page() {
                       : "bg-zinc-800"
                   }`}
                 >
-                  <p className="mb-2 text-sm uppercase text-zinc-400">
-                    {msg.role}
+                  <p className="mb-2 text-xs uppercase tracking-wider text-zinc-400">
+                    {msg.role === "assistant" ? "AI Interviewer" : "You"}
                   </p>
-
-                  <p>{msg.text}</p>
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
                 </div>
               ))}
-              {liveTranscript !== "" && (
+              {liveTranscript && (
                 <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                  <p className="mb-2 text-sm uppercase text-yellow-400">Live</p>
-
-                  <p>{liveTranscript}</p>
+                  <p className="mb-2 text-xs uppercase tracking-wider text-yellow-400">
+                    Live
+                  </p>
+                  <p className="text-sm leading-relaxed">{liveTranscript}</p>
                 </div>
               )}
+              <div ref={transcriptEndRef} />
             </div>
           </div>
         </div>
