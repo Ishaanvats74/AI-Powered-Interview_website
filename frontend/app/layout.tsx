@@ -18,10 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider afterSignOutUrl="/">
-      <html
-        lang="en"
-        suppressHydrationWarning
-      >
+      <html lang="en" suppressHydrationWarning>
         <body className="min-h-screen bg-background text-foreground antialiased">
           <ThemeProvider>
             <Navbar />
@@ -51,8 +48,8 @@ export default function RootLayout({
                   left-1/2
                   top-20
                   -translate-x-1/2
-                  h-[500px]
-                  w-[500px]
+                  h-125
+                  w-125
                   rounded-full
                   bg-indigo-500/15
                   blur-[140px]

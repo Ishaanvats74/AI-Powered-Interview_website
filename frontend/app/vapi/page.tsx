@@ -166,7 +166,7 @@ export default function VapiPage() {
           backgroundSize: "60px 60px",
         }}
       />
-      <div className="absolute left-1/2 top-20 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[120px]" />
+      <div className="absolute left-1/2 top-20 -z-10 h-125 w-125 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[120px]" />
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-black/70 backdrop-blur-xl">
@@ -254,7 +254,7 @@ export default function VapiPage() {
           {/* Transcript */}
           <div className="mt-10 rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
             <h2 className="mb-6 text-xl font-semibold">Live Transcript</h2>
-            <div className="max-h-[500px] space-y-4 overflow-y-auto">
+            <div className="max-h-125 space-y-4 overflow-y-auto">
               {conversation.length === 0 && !liveTranscript && (
                 <p className="text-zinc-500">
                   Transcript will appear here once the interview starts.

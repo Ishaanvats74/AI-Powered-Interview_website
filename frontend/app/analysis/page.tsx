@@ -11,13 +11,7 @@ type Analysis = {
   suggestions: string[];
 };
 
-function InsightCard({
-  title,
-  items,
-}: {
-  title: string;
-  items: string[];
-}) {
+function InsightCard({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
       <h3 className="mb-6 text-xl font-semibold">{title}</h3>
@@ -62,24 +56,18 @@ export default function AnalysisPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
           const err = await response.json();
-          throw new Error(
-            err.detail || "Failed to fetch analysis."
-          );
+          throw new Error(err.detail || "Failed to fetch analysis.");
         }
 
         const result = await response.json();
         setAnalysis(result);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Something went wrong."
-        );
+        setError(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
         setLoading(false);
       }
@@ -94,9 +82,7 @@ export default function AnalysisPage() {
         <div className="text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
 
-          <p className="mt-4 text-muted-foreground">
-            Analyzing your resume...
-          </p>
+          <p className="mt-4 text-muted-foreground">Analyzing your resume...</p>
         </div>
       </div>
     );
@@ -105,13 +91,9 @@ export default function AnalysisPage() {
   if (error) {
     return (
       <div className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center text-center">
-        <h2 className="text-2xl font-bold">
-          Resume Analysis Failed
-        </h2>
+        <h2 className="text-2xl font-bold">Resume Analysis Failed</h2>
 
-        <p className="mt-3 text-muted-foreground">
-          {error}
-        </p>
+        <p className="mt-3 text-muted-foreground">{error}</p>
 
         <button
           onClick={() => router.push("/uploadResume")}
@@ -130,25 +112,19 @@ export default function AnalysisPage() {
           ATS Resume Report
         </span>
 
-        <h1 className="mt-6 text-5xl font-bold">
-          Resume Analysis Complete
-        </h1>
+        <h1 className="mt-6 text-5xl font-bold">Resume Analysis Complete</h1>
 
         <p className="mt-4 text-muted-foreground">
-          Here's how your resume performs against ATS systems.
+          Here&apos;s how your resume performs against ATS systems.
         </p>
       </div>
 
       <div className="mt-12 rounded-3xl border border-border bg-card p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-muted-foreground">
-              ATS Score
-            </p>
+            <p className="text-muted-foreground">ATS Score</p>
 
-            <h2 className="mt-2 text-6xl font-bold">
-              {analysis.ats_score}
-            </h2>
+            <h2 className="mt-2 text-6xl font-bold">{analysis.ats_score}</h2>
           </div>
 
           <div className="rounded-2xl bg-indigo-500/10 px-6 py-4 text-indigo-500 font-medium">
@@ -158,26 +134,15 @@ export default function AnalysisPage() {
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-3">
-        <InsightCard
-          title="Strengths"
-          items={analysis.strengths}
-        />
+        <InsightCard title="Strengths" items={analysis.strengths} />
 
-        <InsightCard
-          title="Weaknesses"
-          items={analysis.weaknesses}
-        />
+        <InsightCard title="Weaknesses" items={analysis.weaknesses} />
 
-        <InsightCard
-          title="Suggestions"
-          items={analysis.suggestions}
-        />
+        <InsightCard title="Suggestions" items={analysis.suggestions} />
       </div>
 
       <div className="mt-12 rounded-3xl border border-border bg-card p-10 text-center">
-        <h2 className="text-3xl font-bold">
-          Ready For Your Interview?
-        </h2>
+        <h2 className="text-3xl font-bold">Ready For Your Interview?</h2>
 
         <p className="mt-4 text-muted-foreground">
           Your AI interviewer will generate questions based on this resume.

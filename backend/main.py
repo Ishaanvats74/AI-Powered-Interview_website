@@ -152,7 +152,6 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
     resume_id = None
 
     try:
-        # 1. Get existing resume to delete its analysis first
         existing_resume = supabase.table("resumes").select("id").eq("user_id", user_id).maybe_single().execute()
 
         if existing_resume and existing_resume.data:
@@ -160,23 +159,19 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
             supabase.table("resume_analyses").delete().eq("resume_id", old_resume_id).execute()
             print(f"Deleted old analysis for resume: {old_resume_id}")
 
-        # 2. Upload PDF to storage
         path = f"{user_id}/{uuid.uuid4()}.pdf"
         supabase.storage.from_("resumes").upload(path, content, {"upsert": "true"})
         print(f"Uploaded to storage: {path}")
 
-        # 3. Upsert resume row — handles first upload and re-upload
         resume = supabase.table("resumes").upsert({"user_id": user_id,"storage_path": path,"processing_status": "processing","is_active": True,},on_conflict="user_id",).execute()
 
         resume_id = resume.data[0]["id"]
         print(f"Resume upserted: {resume_id}")
 
-        # 4. Extract text and load into vector store
         docs = extract_text(content, path, user_id, resume_id)
         load_to_vectorStore(docs, user_id)
         print(f"Loaded {len(docs)} docs to vector store")
 
-        # 5. Mark as completed
         supabase.table("resumes").update({"processing_status": "completed"}).eq("id", resume_id).execute()
         print(f"Resume marked as completed: {resume_id}")
 
@@ -193,22 +188,13 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
 
 
 @app.post("/resume-context")
-async def resume_context(
-    request: Request,
-    data: SearchRequest
-):
+async def resume_context(request: Request,data: SearchRequest):
     api_key = request.headers.get("X-API-Key")
 
     if api_key != os.getenv("VAPI_TOOL_SECRET"):
-        raise HTTPException(
-            status_code=401,
-            detail="Unauthorized"
-        )
+        raise HTTPException(status_code=401,detail="Unauthorized")
 
-    docs = semantic_search(
-        data.query,
-        data.user_id
-    )
+    docs = semantic_search(data.query,data.user_id)
 
     if not docs:
         return {
@@ -237,7 +223,6 @@ async def analyze_resume(request: Request):
     resume = get_active_resume(user_id)
     resume_id = resume["id"]
 
-    # Check cache
     existing = supabase.table("resume_analyses").select("*").eq("resume_id", resume_id).maybe_single().execute()
 
     if existing and existing.data:
@@ -250,7 +235,6 @@ async def analyze_resume(request: Request):
             "suggestions": json.loads(data["suggestions"]) if isinstance(data["suggestions"], str) else data["suggestions"],
         }
 
-    # No cache — run Gemini
     docs = get_full_resume(user_id)
     if not docs:
         raise HTTPException(status_code=404, detail="No resume content found. Please upload your resume again.")
@@ -306,18 +290,13 @@ async def save_interview(request: Request, data: SaveInterviewRequest):
     user_id = get_user_id(clerk_id)
 
     if not data.messages:
-        raise HTTPException(
-            status_code=400,
-            detail="No messages to save."
-        )
+        raise HTTPException(status_code=400,detail="No messages to save.")
 
     try:
-        # STEP 1: Create interview immediately
         interview = supabase.table("interviews").insert({"user_id": user_id,"duration_seconds": data.duration_seconds,"interview_type": data.interview_type,"difficulty": data.difficulty,"status": "processing",}).execute()
 
         interview_id = interview.data[0]["id"]
 
-        # STEP 2: Save transcript immediately
         messages_to_insert = [
             {
                 "interview_id": interview_id,
@@ -330,13 +309,11 @@ async def save_interview(request: Request, data: SaveInterviewRequest):
 
         supabase.table("interview_messages").insert(messages_to_insert).execute()
 
-        # STEP 3: Build conversation text
         conversation_text = "\n".join(
             f"{msg.role.upper()}: {msg.text}"
             for msg in data.messages
         )
 
-        # STEP 4: Gemini evaluation
         prompt = f"""
             You are an expert interview coach evaluating a mock interview.
 
@@ -380,7 +357,6 @@ async def save_interview(request: Request, data: SaveInterviewRequest):
             if key not in result:
                 raise ValueError(f"Missing key in Gemini response: {key}")
 
-        # STEP 5: Update interview
         supabase.table("interviews").update({"score": result["score"],"feedback": result["feedback"],"strengths": json.dumps(result["strengths"]),"weaknesses": json.dumps(result["weaknesses"]),"recommendations": json.dumps(result["recommendations"]),"status": "completed","technical_score": result["technical_score"],"communication_score": result["communication_score"],"confidence_score": result["confidence_score"],"problem_solving_score": result["problem_solving_score"],}).eq("id",interview_id).execute()
 
         return {
@@ -447,12 +423,10 @@ async def get_dashboard(request: Request):
     user_id = get_user_id(clerk_id)
 
     try:
-        # Fetch all interviews for this user
         interviews_res = supabase.table("interviews").select("*").eq("user_id", user_id).eq("status", "completed").order("created_at", desc=True).execute()
 
         interviews = interviews_res.data or []
 
-        # Calculate stats
         total_interviews = len(interviews)
         scores = [i["score"] for i in interviews if i.get("score") is not None]
         average_score = round(sum(scores) / len(scores)) if scores else 0
@@ -460,7 +434,6 @@ async def get_dashboard(request: Request):
         total_practice_seconds = sum(i.get("duration_seconds", 0) for i in interviews)
         total_practice_minutes = round(total_practice_seconds / 60)
 
-        # Get ATS score from active resume analysis
         ats_score = 0
         active_resume = supabase.table("resumes").select("id").eq("user_id", user_id).eq("is_active", True).maybe_single().execute()
 
@@ -469,7 +442,6 @@ async def get_dashboard(request: Request):
             if analysis and analysis.data:
                 ats_score = analysis.data["ats_score"]
 
-        # Format interviews for frontend
         formatted_interviews = [
             {
                 "id": i["id"],
@@ -510,7 +482,6 @@ async def get_interview_messages(interview_id: str, request: Request):
     user_id = get_user_id(clerk_id)
 
     try:
-        # Verify interview belongs to this user
         interview = supabase.table("interviews").select("id").eq("id", interview_id).eq("user_id", user_id).single().execute()
 
         if not interview.data:

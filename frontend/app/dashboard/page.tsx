@@ -21,22 +21,12 @@ type DashboardData = {
   interviews: Interview[];
 };
 
-function StatCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string | number;
-}) {
+function StatCard({ title, value }: { title: string; value: string | number }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
-      <p className="text-sm text-muted-foreground">
-        {title}
-      </p>
+      <p className="text-sm text-muted-foreground">{title}</p>
 
-      <h2 className="mt-4 text-4xl font-bold">
-        {value}
-      </h2>
+      <h2 className="mt-4 text-4xl font-bold">{value}</h2>
     </div>
   );
 }
@@ -67,13 +57,11 @@ export default function DashboardPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
-          throw new Error(
-            "Failed to load dashboard."
-          );
+          throw new Error("Failed to load dashboard.");
         }
 
         const result = await response.json();
@@ -94,9 +82,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
 
-          <p className="mt-4 text-muted-foreground">
-            Loading dashboard...
-          </p>
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -109,9 +95,7 @@ export default function DashboardPage() {
           Dashboard
         </span>
 
-        <h1 className="mt-6 text-5xl font-bold">
-          Interview Analytics
-        </h1>
+        <h1 className="mt-6 text-5xl font-bold">Interview Analytics</h1>
 
         <p className="mt-4 text-muted-foreground">
           Track your progress and improve interview performance.
@@ -119,20 +103,11 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total Interviews"
-          value={data.totalInterviews}
-        />
+        <StatCard title="Total Interviews" value={data.totalInterviews} />
 
-        <StatCard
-          title="Average Score"
-          value={`${data.averageScore}/100`}
-        />
+        <StatCard title="Average Score" value={`${data.averageScore}/100`} />
 
-        <StatCard
-          title="Best Score"
-          value={`${data.bestScore}/100`}
-        />
+        <StatCard title="Best Score" value={`${data.bestScore}/100`} />
 
         <StatCard
           title="Practice Time"
@@ -143,9 +118,7 @@ export default function DashboardPage() {
       <div className="mt-10 rounded-3xl border border-border bg-card p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold">
-              Current Resume
-            </h2>
+            <h2 className="text-2xl font-semibold">Current Resume</h2>
 
             <p className="mt-2 text-muted-foreground">
               Resume used for personalized interview generation.
@@ -158,9 +131,7 @@ export default function DashboardPage() {
             </div>
 
             <button
-              onClick={() =>
-                router.push("/analysis")
-              }
+              onClick={() => router.push("/analysis")}
               className="rounded-full border border-border px-5 py-3 text-sm hover:bg-accent"
             >
               View Report
@@ -170,9 +141,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-10 rounded-3xl border border-border bg-card p-8">
-        <h2 className="mb-8 text-2xl font-semibold">
-          Performance Summary
-        </h2>
+        <h2 className="mb-8 text-2xl font-semibold">Performance Summary</h2>
 
         <div className="space-y-6">
           {[
@@ -197,9 +166,7 @@ export default function DashboardPage() {
               <div className="mb-2 flex justify-between text-sm">
                 <span>{item.label}</span>
 
-                <span className="text-muted-foreground">
-                  {item.score}/100
-                </span>
+                <span className="text-muted-foreground">{item.score}/100</span>
               </div>
 
               <div className="h-2 rounded-full bg-muted">
@@ -216,20 +183,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-10 rounded-3xl border border-border bg-card p-8">
-        <h2 className="mb-8 text-2xl font-semibold">
-          Recent Interviews
-        </h2>
+        <h2 className="mb-8 text-2xl font-semibold">Recent Interviews</h2>
 
         {data.interviews.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-muted-foreground">
-              No interviews yet.
-            </p>
+            <p className="text-muted-foreground">No interviews yet.</p>
 
             <button
-              onClick={() =>
-                router.push("/uploadResume")
-              }
+              onClick={() => router.push("/uploadResume")}
               className="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-white"
             >
               Start Your First Interview
@@ -248,30 +209,19 @@ export default function DashboardPage() {
                   </h3>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {new Date(
-                      item.created_at
-                    ).toLocaleDateString()}
+                    {new Date(item.created_at).toLocaleDateString()}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <span className="font-semibold">
-                    {item.score}/100
-                  </span>
+                  <span className="font-semibold">{item.score}/100</span>
 
                   <span className="text-sm text-muted-foreground">
-                    {Math.floor(
-                      item.duration_seconds / 60
-                    )}{" "}
-                    min
+                    {Math.floor(item.duration_seconds / 60)} min
                   </span>
 
                   <button
-                    onClick={() =>
-                      router.push(
-                        `/interview/results/${item.id}`
-                      )
-                    }
+                    onClick={() => router.push(`/interview/results/${item.id}`)}
                     className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent"
                   >
                     View
@@ -285,18 +235,14 @@ export default function DashboardPage() {
 
       <div className="mt-12 grid gap-4 md:grid-cols-2">
         <button
-          onClick={() =>
-            router.push("/uploadResume")
-          }
+          onClick={() => router.push("/uploadResume")}
           className="rounded-2xl bg-indigo-600 py-4 font-semibold text-white hover:bg-indigo-500"
         >
           Upload New Resume
         </button>
 
         <button
-          onClick={() =>
-            router.push("/analysis")
-          }
+          onClick={() => router.push("/analysis")}
           className="rounded-2xl border border-border py-4 font-semibold hover:bg-accent"
         >
           View ATS Analysis

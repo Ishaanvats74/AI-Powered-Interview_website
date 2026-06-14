@@ -28,7 +28,6 @@ if not client.collection_exists(COLLECTION_NAME):
         vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
     )
 
-# Always ensure payload index exists
 client.create_payload_index(
     collection_name=COLLECTION_NAME,
     field_name="metadata.user_id",

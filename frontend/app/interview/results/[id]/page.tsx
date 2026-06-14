@@ -14,18 +14,10 @@ type ResultData = {
   interview_type: string;
 };
 
-function InsightCard({
-  title,
-  items,
-}: {
-  title: string;
-  items: string[];
-}) {
+function InsightCard({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
-      <h2 className="mb-6 text-xl font-semibold">
-        {title}
-      </h2>
+      <h2 className="mb-6 text-xl font-semibold">{title}</h2>
 
       <div className="space-y-3">
         {items.map((item, index) => (
@@ -71,25 +63,19 @@ export default function InterviewResultsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
           const err = await response.json();
 
-          throw new Error(
-            err.detail || "Failed to load results."
-          );
+          throw new Error(err.detail || "Failed to load results.");
         }
 
         const data = await response.json();
         setResult(data);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Something went wrong."
-        );
+        setError(err instanceof Error ? err.message : "Something went wrong.");
       } finally {
         setLoading(false);
       }
@@ -104,9 +90,7 @@ export default function InterviewResultsPage() {
         <div className="text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
 
-          <p className="mt-4 text-muted-foreground">
-            Generating feedback...
-          </p>
+          <p className="mt-4 text-muted-foreground">Generating feedback...</p>
         </div>
       </div>
     );
@@ -115,13 +99,9 @@ export default function InterviewResultsPage() {
   if (error) {
     return (
       <div className="mx-auto flex min-h-[80vh] max-w-md flex-col items-center justify-center text-center">
-        <h2 className="text-2xl font-bold">
-          Failed To Load Results
-        </h2>
+        <h2 className="text-2xl font-bold">Failed To Load Results</h2>
 
-        <p className="mt-3 text-muted-foreground">
-          {error}
-        </p>
+        <p className="mt-3 text-muted-foreground">{error}</p>
 
         <button
           onClick={() => router.push("/dashboard")}
@@ -133,16 +113,14 @@ export default function InterviewResultsPage() {
     );
   }
 
-  const minutes = Math.floor(
-    result.duration_seconds / 60
-  );
+  const minutes = Math.floor(result.duration_seconds / 60);
 
   const performanceLabel =
     result.score >= 80
       ? "Excellent"
       : result.score >= 60
-      ? "Good"
-      : "Needs Improvement";
+        ? "Good"
+        : "Needs Improvement";
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
@@ -151,9 +129,7 @@ export default function InterviewResultsPage() {
           Interview Complete
         </span>
 
-        <h1 className="mt-6 text-5xl font-bold">
-          Performance Report
-        </h1>
+        <h1 className="mt-6 text-5xl font-bold">Performance Report</h1>
 
         <p className="mt-4 text-muted-foreground">
           Detailed AI evaluation of your interview.
@@ -163,13 +139,9 @@ export default function InterviewResultsPage() {
       <div className="mt-12 rounded-3xl border border-border bg-card p-8">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-muted-foreground">
-              Overall Score
-            </p>
+            <p className="text-muted-foreground">Overall Score</p>
 
-            <h2 className="mt-2 text-7xl font-bold">
-              {result.score}
-            </h2>
+            <h2 className="mt-2 text-7xl font-bold">{result.score}</h2>
           </div>
 
           <div className="rounded-2xl bg-indigo-500/10 px-6 py-4 font-medium text-indigo-500">
@@ -180,9 +152,7 @@ export default function InterviewResultsPage() {
 
       <div className="mt-8 grid gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">
-            Interview Type
-          </p>
+          <p className="text-sm text-muted-foreground">Interview Type</p>
 
           <h3 className="mt-3 text-2xl font-bold capitalize">
             {result.interview_type}
@@ -190,51 +160,30 @@ export default function InterviewResultsPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">
-            Duration
-          </p>
+          <p className="text-sm text-muted-foreground">Duration</p>
 
-          <h3 className="mt-3 text-2xl font-bold">
-            {minutes} mins
-          </h3>
+          <h3 className="mt-3 text-2xl font-bold">{minutes} mins</h3>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-sm text-muted-foreground">
-            Performance
-          </p>
+          <p className="text-sm text-muted-foreground">Performance</p>
 
-          <h3 className="mt-3 text-2xl font-bold">
-            {performanceLabel}
-          </h3>
+          <h3 className="mt-3 text-2xl font-bold">{performanceLabel}</h3>
         </div>
       </div>
 
       <div className="mt-8 rounded-3xl border border-border bg-card p-8">
-        <h2 className="mb-4 text-2xl font-semibold">
-          AI Feedback
-        </h2>
+        <h2 className="mb-4 text-2xl font-semibold">AI Feedback</h2>
 
-        <p className="leading-8 text-muted-foreground">
-          {result.feedback}
-        </p>
+        <p className="leading-8 text-muted-foreground">{result.feedback}</p>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <InsightCard
-          title="Strengths"
-          items={result.strengths}
-        />
+        <InsightCard title="Strengths" items={result.strengths} />
 
-        <InsightCard
-          title="Weaknesses"
-          items={result.weaknesses}
-        />
+        <InsightCard title="Weaknesses" items={result.weaknesses} />
 
-        <InsightCard
-          title="Recommendations"
-          items={result.recommendations}
-        />
+        <InsightCard title="Recommendations" items={result.recommendations} />
       </div>
 
       <div className="mt-10 grid gap-4 md:grid-cols-2">

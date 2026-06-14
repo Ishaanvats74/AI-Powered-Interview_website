@@ -13,9 +13,7 @@ export default function UploadResumePage() {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -54,24 +52,18 @@ export default function UploadResumePage() {
             Authorization: `Bearer ${token}`,
           },
           body: form,
-        }
+        },
       );
 
       if (!response.ok) {
         const err = await response.json();
 
-        throw new Error(
-          err.detail || "Upload failed."
-        );
+        throw new Error(err.detail || "Upload failed.");
       }
 
       router.push("/analysis");
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong."
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setUploading(false);
     }
@@ -84,12 +76,10 @@ export default function UploadResumePage() {
           Resume Based Interview
         </span>
 
-        <h1 className="mt-6 text-5xl font-bold">
-          Upload Your Resume
-        </h1>
+        <h1 className="mt-6 text-5xl font-bold">Upload Your Resume</h1>
 
         <p className="mt-4 text-muted-foreground">
-          We'll analyze your skills and create a personalized AI interview.
+          We&apos;ll analyze your skills and create a personalized AI interview.
         </p>
       </div>
 
@@ -116,9 +106,7 @@ export default function UploadResumePage() {
               </svg>
             </div>
 
-            <h2 className="mt-6 text-2xl font-semibold">
-              Upload Resume
-            </h2>
+            <h2 className="mt-6 text-2xl font-semibold">Upload Resume</h2>
 
             <p className="mt-3 text-center text-muted-foreground">
               PDF only • Maximum size 10 MB
@@ -144,9 +132,7 @@ export default function UploadResumePage() {
                   Resume Selected
                 </h3>
 
-                <p className="mt-2 break-all">
-                  {pdfFile.name}
-                </p>
+                <p className="mt-2 break-all">{pdfFile.name}</p>
 
                 <p className="text-sm text-muted-foreground">
                   {(pdfFile.size / 1024 / 1024).toFixed(2)} MB
@@ -158,7 +144,6 @@ export default function UploadResumePage() {
                 className="cursor-pointer rounded-xl border border-border px-4 py-2 hover:bg-accent"
               >
                 Replace
-
                 <input
                   id="replace-resume"
                   type="file"
@@ -173,9 +158,7 @@ export default function UploadResumePage() {
 
         {pdfFile && (
           <div className="mt-6 rounded-2xl border border-border bg-muted p-6">
-            <h3 className="font-semibold">
-              Interview Details
-            </h3>
+            <h3 className="font-semibold">Interview Details</h3>
 
             <p className="mt-3 text-muted-foreground">
               Estimated Duration: 15–20 minutes
