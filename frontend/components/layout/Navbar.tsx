@@ -67,7 +67,7 @@ export function Navbar() {
           <ThemeToggle />
 
           {isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
+            <UserButton  />
           ) : (
             <Link
               href="/sign-in"
