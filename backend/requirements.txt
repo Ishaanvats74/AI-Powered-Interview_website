@@ -2,7 +2,6 @@ fastapi[standard]
 langchain
 langgraph
 langchain-ollama
-vapi_python
 pypdf
 langchain-text-splitters 
 bs4 
