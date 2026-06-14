@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { Navbar } from "@/app/components/layout/Navbar";
+import { ThemeProvider } from "@/app/components/providers/ThemeProvider";
 
 import "./globals.css";
 
