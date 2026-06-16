@@ -4,6 +4,8 @@ import Vapi from "@vapi-ai/web";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { vapi } from "../lib/vapi";
+
 
 type Message = {
   role: string;
@@ -11,6 +13,7 @@ type Message = {
 };
 
 export default function VapiPage() {
+  const LibVapi = vapi;
   const router = useRouter();
   const { getToken, userId } = useAuth();
   const [liveTranscript, setLiveTranscript] = useState("");
@@ -18,10 +21,12 @@ export default function VapiPage() {
   const [isCallActive, setIsCallActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const vapiRef = useRef<Vapi | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const conversationRef = useRef<Message[]>([]);
+  const isCleaningUp = useRef(false);
 
   const handleSaveInterview = async () => {
     if (conversationRef.current.length === 0) return;
@@ -54,42 +59,50 @@ export default function VapiPage() {
 
       if (!response.ok) {
         const err = await response.json();
-
         throw new Error(err.detail || "Failed to save interview");
       }
 
       const result = await response.json();
-
       router.push(`/interview/results/${result.interview_id}`);
     } catch (error) {
       console.error("Failed to save interview:", error);
-    } finally {
+      setError("Failed to save interview. Please try again.");
       setSaving(false);
     }
   };
 
   useEffect(() => {
     if (!vapiRef.current) {
-      vapiRef.current = new Vapi(process.env.NEXT_PUBLIC_VAPI_KEY!);
+      vapiRef.current = LibVapi;
     }
     const vapi = vapiRef.current;
 
-    vapi.on("speech-start", () => setIsSpeaking(true));
-    vapi.on("speech-end", () => setIsSpeaking(false));
-    vapi.on("call-start", () => {
+    // Speech events
+    const handleSpeechStart = () => setIsSpeaking(true);
+    const handleSpeechEnd = () => setIsSpeaking(false);
+
+    // Call lifecycle events
+    const handleCallStart = () => {
       setIsCallActive(true);
       startTimeRef.current = Date.now();
-    });
-    vapi.on("call-end", () => {
+      setError(null);
+    };
+
+    const handleCallEnd = () => {
+      if (isCleaningUp.current) return;
       setIsCallActive(false);
       setIsSpeaking(false);
       handleSaveInterview();
-    });
-    vapi.on("message", (message) => {
+    };
+
+    // Message handler
+    const handleMessage = (message: any) => {
       if (message.type !== "transcript") return;
+
       if (message.transcriptType === "partial") {
         setLiveTranscript(message.transcript);
       }
+
       if (message.transcriptType === "final") {
         setConversation((prev) => {
           const updated = [
@@ -99,45 +112,64 @@ export default function VapiPage() {
               text: message.transcript,
             },
           ];
-
           conversationRef.current = updated;
           return updated;
         });
-
         setLiveTranscript("");
       }
-    });
-    vapi.on("error", (e) => console.error(e));
+    };
+
+    // Error handler
+    const handleError = (e: any) => {
+      console.error("Vapi error:", e);
+      setError("An error occurred during the interview. Please try again.");
+      setIsCallActive(false);
+    };
+
+    // Attach listeners
+    vapi.on("speech-start", handleSpeechStart);
+    vapi.on("speech-end", handleSpeechEnd);
+    vapi.on("call-start", handleCallStart);
+    vapi.on("call-end", handleCallEnd);
+    vapi.on("message", handleMessage);
+    vapi.on("error", handleError);
 
     return () => {
-      vapi.stop();
+      isCleaningUp.current = true;
+      // Remove listeners
+      vapi.off("speech-start", handleSpeechStart);
+      vapi.off("speech-end", handleSpeechEnd);
+      vapi.off("call-start", handleCallStart);
+      vapi.off("call-end", handleCallEnd);
+      vapi.off("message", handleMessage);
+      vapi.off("error", handleError);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleStart = async () => {
     if (!vapiRef.current) return;
     try {
+      setError(null);
       setConversation([]);
       conversationRef.current = [];
+      
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Pull config from sessionStorage if set via setup page
+      
       const config = JSON.parse(
         sessionStorage.getItem("interviewConfig") || "{}",
       );
+      
       await vapiRef.current.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
         variableValues: {
           userId: userId,
-
           interviewType: config.interviewType || "fullstack",
-
           difficulty: config.difficulty || "medium",
-
           duration: config.duration || "15",
         },
       });
     } catch (error) {
-      console.error(error);
+      console.error("Failed to start interview:", error);
+      setError("Failed to start interview. Please check your microphone and try again.");
     }
   };
 
@@ -146,7 +178,8 @@ export default function VapiPage() {
     try {
       await vapiRef.current.stop();
     } catch (error) {
-      console.error(error);
+      console.error("Failed to stop interview:", error);
+      setError("Failed to stop interview. Please try again.");
     }
   };
 
@@ -168,24 +201,6 @@ export default function VapiPage() {
       />
       <div className="absolute left-1/2 top-20 -z-10 h-125 w-125 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[120px]" />
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-black/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <h1 className="text-2xl font-bold">
-            Interview<span className="text-indigo-500">AI</span>
-          </h1>
-          <button
-            onClick={() => {
-              if (isCallActive) handleStop();
-              router.push("/");
-            }}
-            className="rounded-xl border border-zinc-700 px-5 py-2 hover:bg-zinc-900 transition"
-          >
-            Exit
-          </button>
-        </div>
-      </nav>
-
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="mx-auto max-w-5xl rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-10 backdrop-blur-xl">
           {/* Header */}
@@ -201,8 +216,15 @@ export default function VapiPage() {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+              {error}
+            </div>
+          )}
+
           {/* Status */}
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-6">
             <div
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                 saving
@@ -248,6 +270,13 @@ export default function VapiPage() {
               className="flex-1 rounded-2xl border border-red-500 py-4 font-semibold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               End Interview
+            </button>
+            <button
+              onClick={() => router.push("/")}
+              disabled={isCallActive}
+              className="flex-1 rounded-2xl border border-zinc-600 py-4 font-semibold text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Exit
             </button>
           </div>
 
