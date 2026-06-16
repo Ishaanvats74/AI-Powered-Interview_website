@@ -21,7 +21,7 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "https://ai-powered-interview-website-theta.vercel.app/"
+    "https://ai-powered-interview-website-theta.vercel.app"
 ]
 
 app.add_middleware(
