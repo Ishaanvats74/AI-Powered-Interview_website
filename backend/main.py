@@ -35,7 +35,7 @@ app.add_middleware(
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 sdk = Clerk(bearer_auth=os.getenv('CLERK_SECRET_KEY'))
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
-AUTHORIZED_PARTIES = ["http://localhost:3000"]
+AUTHORIZED_PARTIES = ["http://localhost:3000","https://ai-powered-interview-website-theta.vercel.app"]
 MAX_SIZE = 10 * 1024 * 1024
 
 
