@@ -21,7 +21,9 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "https://ai-powered-interview-website-theta.vercel.app"
+    "https://ai-powered-interview-website-theta.vercel.app",
+    "https://ai-powered-interview-website-h50lycr4s-ishaanvats74s-projects.vercel.app",
+    "https://ai-powered-interview-website-git-main-ishaanvats74s-projects.vercel.app"
 ]
 
 app.add_middleware(
@@ -35,7 +37,7 @@ app.add_middleware(
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
 sdk = Clerk(bearer_auth=os.getenv('CLERK_SECRET_KEY'))
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash-lite")
-AUTHORIZED_PARTIES = ["http://localhost:3000","https://ai-powered-interview-website-theta.vercel.app"]
+AUTHORIZED_PARTIES = ["http://localhost:3000","https://ai-powered-interview-website-theta.vercel.app","https://ai-powered-interview-website-git-main-ishaanvats74s-projects.vercel.app","https://ai-powered-interview-website-h50lycr4s-ishaanvats74s-projects.vercel.app"]
 MAX_SIZE = 10 * 1024 * 1024
 
 

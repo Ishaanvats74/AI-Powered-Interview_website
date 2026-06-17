@@ -1,6 +1,5 @@
 "use client";
 
-import Vapi from "@vapi-ai/web";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -22,7 +21,7 @@ export default function VapiPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
-  const vapiRef = useRef<Vapi | null>(null);
+  const vapiRef = useRef(vapi);
   const startTimeRef = useRef<number | null>(null);
   const conversationRef = useRef<Message[]>([]);
   const isCleaningUp = useRef(false);
@@ -71,10 +70,6 @@ export default function VapiPage() {
   };
 
   useEffect(() => {
-  
-    if (!vapiRef.current) {
-      vapiRef.current = LibVapi;
-    }
     const vapi = vapiRef.current;
 
     // Speech events
