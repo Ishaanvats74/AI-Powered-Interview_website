@@ -26,11 +26,6 @@ export default function VapiPage() {
   const startTimeRef = useRef<number | null>(null);
   const conversationRef = useRef<Message[]>([]);
   const isCleaningUp = useRef(false);
-    console.log("PUBLIC KEY:", process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
-
-    console.log("ASSISTANT ID:", process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID);
-
-    console.log("BACKEND:", process.env.NEXT_PUBLIC_BACKEND_URL);
 
   const handleSaveInterview = async () => {
     if (conversationRef.current.length === 0) return;
