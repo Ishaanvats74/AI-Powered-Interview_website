@@ -153,7 +153,7 @@ export default function VapiPage() {
         sessionStorage.getItem("interviewConfig") || "{}",
       );
 
-      await vapiRef.current.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
+      vapiRef.current.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
         variableValues: {
           userId: userId,
           interviewType: config.interviewType || "fullstack",
@@ -173,6 +173,7 @@ export default function VapiPage() {
     if (!vapiRef.current) return;
     try {
       await vapiRef.current.stop();
+      setIsCallActive(false);
     } catch (error) {
       console.error("Failed to stop interview:", error);
       setError("Failed to stop interview. Please try again.");
