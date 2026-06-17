@@ -11,7 +11,6 @@ type Message = {
 };
 
 export default function VapiPage() {
-  const LibVapi = vapi;
   const router = useRouter();
   const { getToken, userId } = useAuth();
   const [liveTranscript, setLiveTranscript] = useState("");
