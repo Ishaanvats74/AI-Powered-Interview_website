@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { vapi } from "../lib/vapi";
 
-
 type Message = {
   role: string;
   text: string;
@@ -27,6 +26,11 @@ export default function VapiPage() {
   const startTimeRef = useRef<number | null>(null);
   const conversationRef = useRef<Message[]>([]);
   const isCleaningUp = useRef(false);
+    console.log("PUBLIC KEY:", process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY);
+
+    console.log("ASSISTANT ID:", process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID);
+
+    console.log("BACKEND:", process.env.NEXT_PUBLIC_BACKEND_URL);
 
   const handleSaveInterview = async () => {
     if (conversationRef.current.length === 0) return;
@@ -72,6 +76,7 @@ export default function VapiPage() {
   };
 
   useEffect(() => {
+  
     if (!vapiRef.current) {
       vapiRef.current = LibVapi;
     }
@@ -152,13 +157,13 @@ export default function VapiPage() {
       setError(null);
       setConversation([]);
       conversationRef.current = [];
-      
+
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       const config = JSON.parse(
         sessionStorage.getItem("interviewConfig") || "{}",
       );
-      
+
       await vapiRef.current.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID!, {
         variableValues: {
           userId: userId,
@@ -169,7 +174,9 @@ export default function VapiPage() {
       });
     } catch (error) {
       console.error("Failed to start interview:", error);
-      setError("Failed to start interview. Please check your microphone and try again.");
+      setError(
+        "Failed to start interview. Please check your microphone and try again.",
+      );
     }
   };
 
